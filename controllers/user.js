@@ -81,20 +81,20 @@ exports.login = async (req, res) => {
   }
 };
 
-// exports.getUser = async (req, res) => {
-//   try {
-//     const user = await User.find({});
-//     res.status(201).json({
-//       success: true,
-//       data: user,
-//     });
-//   } catch (err) {
-//     res.status(400).json({
-//       success: false,
-//       msg: err.message,
-//     });
-//   }
-// };
+exports.getUser = async (req, res) => {
+  try {
+    const user = await User.find({});
+    res.status(201).json({
+      success: true,
+      data: user,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      msg: err.message,
+    });
+  }
+};
 
 exports.logout = (req, res, next) => {
   res.cookie('token', 'none', {
