@@ -2,10 +2,6 @@
 
 > Backend API acc to test
 
-## Usage
-
-Rename "config.env.env" to "config.env" and update the values/settings to your own
-
 ## Install Dependencies
 
 ```
