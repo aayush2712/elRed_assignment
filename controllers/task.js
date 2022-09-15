@@ -1,6 +1,16 @@
 const Task = require('../models/Task');
 
-exports.createTask = async (req, res) => {
+exports.createTask = async (req, res, next) => {
+  const bodyAllowedList = ['task', 'date', 'status'];
+
+  if (!(Object.keys(req.body).toString() === bodyAllowedList.toString())) {
+    return next(
+      res.status(400).json({
+        success: 'false',
+        msg: 'Extra key detected',
+      })
+    );
+  }
   try {
     const { task, date, status } = req.body;
     const newTask = await Task.create({
@@ -61,6 +71,6 @@ exports.deleteTask = async (req, res, next) => {
       })
     );
   }
-  task.remove();
-  res.status(200).json({ success: true, data: task });
+  const del = await Task.findByIdAndDelete(req.params.id);
+  res.status(200).json({ success: true, data: del });
 };

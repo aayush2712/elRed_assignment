@@ -1,14 +1,24 @@
 const sendEmail = require('../middleware/sendemail');
 const User = require('../models/User');
 
-exports.createUser = async (req, res) => {
+exports.createUser = async (req, res, next) => {
+  const bodyAllowedList = ['name', 'email', 'password'];
+
+  if (!(Object.keys(req.body).toString() === bodyAllowedList.toString())) {
+    return next(
+      res.status(400).json({
+        success: 'false',
+        msg: 'Extra key detected',
+      })
+    );
+  }
+
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
     const user = await User.create({
       name,
       email,
       password,
-      role,
     });
 
     sendTokenResponse(user, 200, res);
@@ -20,7 +30,7 @@ exports.createUser = async (req, res) => {
   }
 };
 
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   try {
     const { email, password, otp } = req.body;
 
