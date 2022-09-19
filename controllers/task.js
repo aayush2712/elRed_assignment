@@ -1,8 +1,9 @@
 const Task = require('../models/Task');
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
 exports.createTask = async (req, res, next) => {
-  const bodyAllowedList = ['task', 'date', 'status', 'user'];
+  const bodyAllowedList = ['task', 'date', 'status'];
 
   if (!(Object.keys(req.body).toString() === bodyAllowedList.toString())) {
     return next(
@@ -12,14 +13,19 @@ exports.createTask = async (req, res, next) => {
       })
     );
   }
+
   try {
-    const { task, date, status, user } = req.body;
+    token = req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    const user_id = user._id.toString();
+    const { task, date, status } = req.body;
     const newTask = await Task.create({
       task,
       date,
       status,
-      user,
     });
+    await Task.findByIdAndUpdate(newTask.id, { user: user_id });
 
     res.status(201).json({
       success: true,
@@ -73,6 +79,7 @@ exports.deleteTask = async (req, res, next) => {
       })
     );
   }
+
   if (task.user.toString() !== req.user.id) {
     return next(
       res.status(404).json({
