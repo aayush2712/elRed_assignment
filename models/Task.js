@@ -15,6 +15,11 @@ const TaskSchema = new mongoose.Schema({
     enum: ['Completed', 'Incomplete'],
     required: [true, 'Please add a status'],
   },
+  user: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: true,
+  },
 });
 
 module.exports = mongoose.model('Task', TaskSchema);

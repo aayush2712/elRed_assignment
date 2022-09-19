@@ -1,7 +1,8 @@
 const Task = require('../models/Task');
+const User = require('../models/User');
 
 exports.createTask = async (req, res, next) => {
-  const bodyAllowedList = ['task', 'date', 'status'];
+  const bodyAllowedList = ['task', 'date', 'status', 'user'];
 
   if (!(Object.keys(req.body).toString() === bodyAllowedList.toString())) {
     return next(
@@ -12,11 +13,12 @@ exports.createTask = async (req, res, next) => {
     );
   }
   try {
-    const { task, date, status } = req.body;
+    const { task, date, status, user } = req.body;
     const newTask = await Task.create({
       task,
       date,
       status,
+      user,
     });
 
     res.status(201).json({
@@ -68,6 +70,14 @@ exports.deleteTask = async (req, res, next) => {
       res.status(404).json({
         success: false,
         msg: 'Task Not Found',
+      })
+    );
+  }
+  if (task.user.toString() !== req.user.id) {
+    return next(
+      res.status(404).json({
+        success: false,
+        msg: 'User not authorized to delete this task',
       })
     );
   }
