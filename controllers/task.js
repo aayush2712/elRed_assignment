@@ -51,7 +51,14 @@ exports.updateTask = async (req, res, next) => {
         })
       );
     }
-
+    if (find.user.toString() !== req.user.id) {
+      return next(
+        res.status(404).json({
+          success: false,
+          msg: 'User not authorized to update this task',
+        })
+      );
+    }
     find = await Task.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -59,7 +66,7 @@ exports.updateTask = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      find,
+      data: find,
     });
   } catch (err) {
     res.status(400).json({
