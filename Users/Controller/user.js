@@ -1,5 +1,5 @@
-const sendEmail = require('../middleware/sendemail');
-const User = require('../models/User');
+const sendEmail = require('../../middleware/sendemail');
+const User = require('../Model/User');
 
 exports.createUser = async (req, res, next) => {
   const bodyAllowedList = ['name', 'email', 'password'];
@@ -45,6 +45,7 @@ exports.login = async (req, res, next) => {
 
     if (!password && !otp) {
       const message = user.generateOTP();
+      console.log(message);
 
       try {
         await sendEmail({
@@ -55,16 +56,16 @@ exports.login = async (req, res, next) => {
         console.log(err);
       }
 
-      user = await User.updateOne({ otp: message });
+      user = await User.updateOne({ email: email }, { otp: message });
       res.status(200).json({
         success: true,
-        msg: 'OTP send please check your email',
+        msg: 'OTP sent please check your email',
       });
     }
 
     if (otp) {
       if (user.otp === otp) {
-        await User.updateOne({ otp: '' });
+        await User.updateOne({ email: email }, { otp: '' });
         sendTokenResponse(user, 200, res);
       } else {
         res.status(400).json({
