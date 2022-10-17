@@ -1,8 +1,8 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./db');
-const user = require('./Users/Route/user');
-const task = require('./Tasks/Route/task');
+const user = require('./Users/userRoute');
+const task = require('./Tasks/taskRoute');
 const cookieParser = require('cookie-parser');
 
 dotenv.config({ path: './config.env' });

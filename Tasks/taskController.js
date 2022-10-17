@@ -1,5 +1,5 @@
-const Task = require('../Model/Task');
-const User = require('../../Users/Model/User');
+const Task = require('./taskModel');
+const User = require('../Users/userModel');
 const jwt = require('jsonwebtoken');
 
 exports.createTask = async (req, res, next) => {

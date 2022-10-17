@@ -1,5 +1,5 @@
-const sendEmail = require('../../middleware/sendemail');
-const User = require('../Model/User');
+const sendEmail = require('../middleware/sendemail');
+const User = require('./userModel');
 
 exports.createUser = async (req, res, next) => {
   const bodyAllowedList = ['name', 'email', 'password'];
