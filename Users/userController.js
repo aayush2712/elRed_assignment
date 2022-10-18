@@ -1,18 +1,9 @@
-const sendEmail = require('../middleware/sendemail');
+const { createUser, login, logout, checkKeys } = require('./userValidations');
 const User = require('./userModel');
+const errorResponse = require('../Utility/errorResponse');
 
 exports.createUser = async (req, res, next) => {
-  const bodyAllowedList = ['name', 'email', 'password'];
-
-  if (!(Object.keys(req.body).toString() === bodyAllowedList.toString())) {
-    return next(
-      res.status(400).json({
-        success: 'false',
-        msg: 'Extra key detected',
-      })
-    );
-  }
-
+  checkKeys(req, next);
   try {
     const { name, email, password } = req.body;
     const user = await User.create({
@@ -20,101 +11,18 @@ exports.createUser = async (req, res, next) => {
       email,
       password,
     });
-
     sendTokenResponse(user, 200, res);
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      msg: err.message,
-    });
+    return next(new errorResponse(err.message, 400));
   }
 };
 
 exports.login = async (req, res, next) => {
-  try {
-    const { email, password, otp } = req.body;
-
-    let user = await User.findOne({ email }).select('+password');
-
-    if (!user) {
-      res.status(401).json({
-        success: false,
-        msg: 'Invalid credentials',
-      });
-    }
-
-    if (!password && !otp) {
-      const message = user.generateOTP();
-      console.log(message);
-
-      try {
-        await sendEmail({
-          email: user.email,
-          message,
-        });
-      } catch (err) {
-        console.log(err);
-      }
-
-      user = await User.updateOne({ email: email }, { otp: message });
-      res.status(200).json({
-        success: true,
-        msg: 'OTP sent please check your email',
-      });
-    }
-
-    if (otp) {
-      if (user.otp === otp) {
-        await User.updateOne({ email: email }, { otp: '' });
-        sendTokenResponse(user, 200, res);
-      } else {
-        res.status(400).json({
-          success: false,
-          msg: 'Old otp used',
-        });
-      }
-    } else {
-      const isMatch = await user.matchPassword(password.toString());
-
-      if (!isMatch) {
-        res.status(401).json({
-          success: false,
-          msg: 'Invalid credentials',
-        });
-      }
-      sendTokenResponse(user, 200, res);
-    }
-  } catch (err) {
-    res.status(400).json({
-      success: false,
-      msg: err.message,
-    });
-  }
-};
-
-exports.getUser = async (req, res) => {
-  try {
-    const user = await User.find({});
-    res.status(201).json({
-      success: true,
-      data: user,
-    });
-  } catch (err) {
-    res.status(400).json({
-      success: false,
-      msg: err.message,
-    });
-  }
+  login(req, res, next);
 };
 
 exports.logout = (req, res, next) => {
-  res.cookie('token', 'none', {
-    expires: new Date(Date.now() + 10 * 1000),
-  });
-
-  res.status(200).json({
-    success: true,
-  });
+  logout(req, res, next);
 };
 
 const sendTokenResponse = (user, statusCode, res) => {
