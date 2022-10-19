@@ -1,28 +1,37 @@
-const { createUser, login, logout, checkKeys } = require('./userValidations');
-const User = require('./userModel');
 const errorResponse = require('../Utility/errorResponse');
+const {
+  createUser,
+  checkKeys,
+  checkUser,
+  checkPasswordOtp,
+  login,
+} = require('./userValidations');
 
 exports.createUser = async (req, res, next) => {
-  checkKeys(req, next);
-  try {
-    const { name, email, password } = req.body;
-    const user = await User.create({
-      name,
-      email,
-      password,
-    });
-    sendTokenResponse(user, 200, res);
-  } catch (err) {
-    return next(new errorResponse(err.message, 400));
-  }
+  let user = createUser(req, next);
+  user
+    .then((user) => sendTokenResponse(user, 200, res))
+    .catch((err) => next(new errorResponse(err, 400)));
 };
 
 exports.login = async (req, res, next) => {
-  login(req, res, next);
+  let user = login(req, res, next);
+  user
+    .then((user) => sendTokenResponse(user, 200, res))
+    .catch((err) => next(new errorResponse(err, 400)));
 };
 
 exports.logout = (req, res, next) => {
-  logout(req, res, next);
+  res
+    .cookie('token', 'none', {
+      expires: new Date(Date.now() + 10 * 1000),
+    })
+    .status(200)
+    .json({
+      success: true,
+      message: 'Succesfully logged out',
+      result: [],
+    });
 };
 
 const sendTokenResponse = (user, statusCode, res) => {
@@ -31,8 +40,12 @@ const sendTokenResponse = (user, statusCode, res) => {
     expires: new Date(Date.now() + 30 * 1000),
     httpOnly: true,
   };
-  res.status(statusCode).cookie('token', token, options).json({
-    sucess: true,
-    token,
-  });
+  res
+    .status(statusCode)
+    .cookie('token', token, options)
+    .json({
+      sucess: true,
+      message: 'Token generated',
+      result: [{ token }],
+    });
 };

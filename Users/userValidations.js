@@ -2,25 +2,33 @@ const errorResponse = require('../Utility/errorResponse');
 const User = require('./userModel');
 const sendEmail = require('../middleware/sendemail');
 
-exports.checkKeys = (req, next) => {
-  return new Promise((resolve, reject) => {
+//Create user
+exports.createUser = (req, next) => {
+  return new Promise(async (resolve, reject) => {
     let bodyAllowedList = ['name', 'email', 'password'];
+
     if (!(Object.keys(req.body).toString() === bodyAllowedList.toString())) {
-      return next(new errorResponse('Extra key detected', 400));
+      reject('Extra key detected');
+    }
+    try {
+      const { name, email, password } = req.body;
+      const user = await User.create({ name, email, password });
+      resolve(user);
+    } catch (err) {
+      return next(new errorResponse(err.message, 400));
     }
   });
 };
 
-exports.createUser = (req, res, next) => {};
-
+//To check for user,password and otp
 exports.login = async (req, res, next) => {
-  try {
+  return new Promise(async (resolve, reject) => {
     const { email, password, otp } = req.body;
 
     let user = await User.findOne({ email }).select('+password');
 
     if (!user) {
-      return next(new errorResponse('Invalid credentials', 401));
+      reject('Invalid credentials');
     }
 
     if (!password && !otp) {
@@ -45,41 +53,17 @@ exports.login = async (req, res, next) => {
     if (otp) {
       if (user.otp === otp) {
         await User.updateOne({ email: email }, { otp: '' });
-        sendTokenResponse(user, 200, res);
+        resolve(user);
       } else {
-        return next(new errorResponse('Old otp used', 400));
+        reject('Old otp used');
       }
     } else {
       const isMatch = await user.matchPassword(password.toString());
 
       if (!isMatch) {
-        return next(new errorResponse('Invalid credentials', 400));
+        reject('Invalid credentials');
       }
-      sendTokenResponse(user, 200, res);
+      resolve(user);
     }
-  } catch (err) {
-    return next(new errorResponse(err.message, 400));
-  }
-};
-
-exports.logout = (req, res, next) => {
-  res.cookie('token', 'none', {
-    expires: new Date(Date.now() + 10 * 1000),
-  });
-
-  res.status(200).json({
-    success: true,
-  });
-};
-
-const sendTokenResponse = (user, statusCode, res) => {
-  const token = user.getSignedJwtToken();
-  const options = {
-    expires: new Date(Date.now() + 30 * 1000),
-    httpOnly: true,
-  };
-  res.status(statusCode).cookie('token', token, options).json({
-    sucess: true,
-    token,
   });
 };

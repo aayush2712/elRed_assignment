@@ -4,7 +4,7 @@ const connectDB = require('./Config/db');
 const user = require('./Users/userRoute');
 const task = require('./Tasks/taskRoute');
 const cookieParser = require('cookie-parser');
-const error = require('./middleware/errorHandler');
+const error = require('./Utility/errorHandler');
 
 dotenv.config({ path: './config.env' });
 

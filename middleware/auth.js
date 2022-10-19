@@ -11,7 +11,8 @@ exports.protect = async (req, res, next) => {
     return next(
       res.status(401).json({
         success: false,
-        msg: 'Not authorized to view this route',
+        message: 'Not authorized to view this route',
+        result: [],
       })
     );
   }
@@ -24,7 +25,8 @@ exports.protect = async (req, res, next) => {
     return next(
       res.status(401).json({
         success: false,
-        msg: 'Not authorized to view this route',
+        message: 'Not authorized to view this route',
+        result: [],
       })
     );
   }
