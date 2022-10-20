@@ -1,11 +1,5 @@
 const errorResponse = require('../Utility/errorResponse');
-const {
-  createUser,
-  checkKeys,
-  checkUser,
-  checkPasswordOtp,
-  login,
-} = require('./userValidations');
+const { createUser, login } = require('./userValidations');
 
 exports.createUser = async (req, res, next) => {
   let user = createUser(req, next);

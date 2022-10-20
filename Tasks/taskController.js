@@ -1,42 +1,34 @@
-const Task = require('./taskModel');
 const { createTask, updateTask, deleteTask } = require('./taskValidations');
 const errorResponse = require('../Utility/errorResponse');
 
 exports.createTask = async (req, res, next) => {
-  let task = createTask(req);
+  const task = createTask(req);
+  const msg = 'Task created succesfully';
   task
-    .then((task) =>
-      res.status(201).json({
-        success: true,
-        message: 'Task created succesfully',
-        result: [{ task }],
-      })
-    )
+    .then((task) => sendResponse(msg, 200, res, task))
     .catch((err) => next(new errorResponse(err, 400)));
 };
 
 exports.updateTask = async (req, res, next) => {
-  let task = updateTask(req);
+  const task = updateTask(req);
+  const msg = 'Task updated succesfully';
   task
-    .then((task) =>
-      res.status(201).json({
-        success: true,
-        message: 'Task updated succesfully',
-        result: [{ task }],
-      })
-    )
+    .then((task) => sendResponse(msg, 200, res, task))
     .catch((err) => next(new errorResponse(err, 400)));
 };
 
 exports.deleteTask = async (req, res, next) => {
-  let task = deleteTask(req);
+  const task = deleteTask(req);
+  const msg = 'Task deleted succesfully';
   task
-    .then((task) =>
-      res.status(200).json({
-        success: true,
-        message: 'Task deleted succesfully',
-        result: [{ task }],
-      })
-    )
+    .then((task) => sendResponse(msg, 200, res, task))
     .catch((err) => next(new errorResponse(err, 400)));
+};
+
+const sendResponse = (msg, statusCode, res, data) => {
+  res.status(statusCode).json({
+    success: true,
+    message: msg,
+    result: [{ data }],
+  });
 };

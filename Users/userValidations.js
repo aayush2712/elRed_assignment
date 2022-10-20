@@ -1,4 +1,3 @@
-const errorResponse = require('../Utility/errorResponse');
 const User = require('./userModel');
 const sendEmail = require('../middleware/sendemail');
 
@@ -10,13 +9,11 @@ exports.createUser = (req, next) => {
     if (!(Object.keys(req.body).toString() === bodyAllowedList.toString())) {
       reject('Extra key detected');
     }
-    try {
-      const { name, email, password } = req.body;
-      const user = await User.create({ name, email, password });
-      resolve(user);
-    } catch (err) {
-      return next(new errorResponse(err.message, 400));
-    }
+
+    const { name, email, password } = req.body;
+    User.create({ name, email, password })
+      .then((user) => resolve(user))
+      .catch((err) => reject(err));
   });
 };
 
@@ -25,45 +22,46 @@ exports.login = async (req, res, next) => {
   return new Promise(async (resolve, reject) => {
     const { email, password, otp } = req.body;
 
-    let user = await User.findOne({ email }).select('+password');
+    User.findOne({ email })
+      .select('+password')
+      .then((user) => {
+        if (!user) {
+          reject('Invalid credentials');
+        } else if (!password && !otp) {
+          const message = user.generateOTP();
 
-    if (!user) {
-      reject('Invalid credentials');
-    }
+          sendEmail({
+            email: user.email,
+            message,
+          }).catch(reject('Email sending failed'));
 
-    if (!password && !otp) {
-      const message = user.generateOTP();
+          user = User.updateOne({ email: email }, { otp: message }).catch(
+            (err) => reject(err)
+          );
+          res.status(200).json({
+            success: true,
+            message: 'OTP sent please check your email',
+            result: [],
+          });
+        } else if (otp) {
+          if (user.otp === otp) {
+            User.updateOne({ email: email }, { otp: '' })
+              .then(resolve(user))
+              .catch((err) => reject(err));
+          } else {
+            reject('Old otp used');
+          }
+        } else {
+          const isMatch = user
+            .matchPassword(password)
+            .catch((err) => reject(err));
 
-      try {
-        await sendEmail({
-          email: user.email,
-          message,
-        });
-      } catch (err) {
-        console.log(err);
-      }
-
-      user = await User.updateOne({ email: email }, { otp: message });
-      res.status(200).json({
-        success: true,
-        msg: 'OTP sent please check your email',
-      });
-    }
-
-    if (otp) {
-      if (user.otp === otp) {
-        await User.updateOne({ email: email }, { otp: '' });
-        resolve(user);
-      } else {
-        reject('Old otp used');
-      }
-    } else {
-      const isMatch = await user.matchPassword(password.toString());
-
-      if (!isMatch) {
-        reject('Invalid credentials');
-      }
-      resolve(user);
-    }
+          if (!isMatch) {
+            reject('Invalid credentials');
+          }
+          resolve(user);
+        }
+      })
+      .catch((err) => reject(err));
   });
 };
