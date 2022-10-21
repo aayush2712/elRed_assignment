@@ -7,9 +7,6 @@ const errorHandler = (err, req, res, next) => {
   if (errName === 'ValidationError') {
     const msg = 'Please enter correct value type';
     error = new ErrorResponse(msg, 400);
-  } else if (errName === 'ReferenceError') {
-    const msg = 'Please enter correct value type';
-    error = new ErrorResponse(msg, 400);
   }
   res.status(400).json({
     success: false,
